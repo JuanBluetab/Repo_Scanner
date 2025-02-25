@@ -77,4 +77,24 @@ python scanner.py --base_path ../repositories --json_output_path ../output/scan_
 ```bash
 python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema --table_name repository_data
 ```
-````
+
+## Configuración de la Base de Datos PostgreSQL con Podman
+
+Para levantar una base de datos PostgreSQL utilizando Podman, puedes usar los siguientes comandos:
+
+```bash
+podman pod create --name mypod -p 5432:5432
+podman run -d --name mypostgres --pod mypod -e POSTGRES_PASSWORD=mysecretpassword postgres:latest
+```
+
+Estos comandos crearán un pod llamado `mypod` y un contenedor PostgreSQL llamado `mypostgres` con la contraseña `mysecretpassword`.
+
+## Conexión a la Base de Datos con un Cliente
+
+Para conectarse a la base de datos PostgreSQL utilizando un cliente, puedes usar los siguientes parámetros de conexión:
+
+- **Host**: localhost
+- **Port**: 5432
+- **Database**: postgres
+- **Nombre de usuario**: postgres
+- **Contraseña**: mysecretpassword
