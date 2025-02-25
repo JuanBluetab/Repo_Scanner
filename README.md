@@ -37,6 +37,22 @@ python scanner.py --base_path ../repositories --json_output_path ../output/scan_
 - `--json_output_path`: Ruta al archivo de salida en formato JSON.
 - `--txt_output_path`: Ruta al archivo de salida en formato de texto.
 
+### update_spark_version.py
+
+Este script copia los repositorios a una nueva ubicación y actualiza las dependencias de Spark a la versión 3.5 si es necesario.
+
+#### Uso
+
+```bash
+python update_spark_version.py --base_path ../repositories --new_base_path ../updated_repositories --scan_results_path ../output/scan_results.json
+```
+
+#### Parámetros
+
+- `--base_path`: Ruta base a los repositorios originales.
+- `--new_base_path`: Nueva ruta base para los repositorios copiados.
+- `--scan_results_path`: Ruta al archivo JSON que contiene los resultados del escaneo.
+
 ### export_to_db.py
 
 Este script exporta los datos JSON a una base de datos PostgreSQL, creando la tabla si no existe.
@@ -70,6 +86,12 @@ python clone_repos.py --config_path ../config/repos_to_clone.yaml --clone_path .
 
 ```bash
 python scanner.py --base_path ../repositories --json_output_path ../output/scan_results.json --txt_output_path ../output/scan_results.txt
+```
+
+### Actualizar Versiones de Spark
+
+```bash
+python update_spark_version.py --base_path ../repositories --new_base_path ../updated_repositories --scan_results_path ../output/scan_results.json
 ```
 
 ### Exportar Datos a la Base de Datos
