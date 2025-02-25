@@ -1,0 +1,12 @@
+spark:
+  master: "local"
+  app:
+    name: "Repo2App"
+    settings:
+      executorMemory: "8g"
+      driverMemory: "4g"
+      cores: 8
+database:
+  url: "jdbc:postgresql://localhost:5432/repo2db"
+  user: "repo2user"
+  password: "repo2password"
