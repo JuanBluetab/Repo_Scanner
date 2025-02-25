@@ -1,0 +1,3 @@
+repositories:
+  - https://github.com/cartershanklin/pyspark-cheatsheet.git
+  - https://github.com/Parsely/pyspark-cassandra.git
