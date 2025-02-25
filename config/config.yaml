@@ -1,3 +1,6 @@
 repositories:
   - https://github.com/cartershanklin/pyspark-cheatsheet.git
   - https://github.com/Parsely/pyspark-cassandra.git
+
+spark_version: "3.5.0"
+artifact_suffix: "_2.13"
