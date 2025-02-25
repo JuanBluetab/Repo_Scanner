@@ -13,7 +13,7 @@ Este script clona los repositorios especificados en un archivo de configuración
 #### Uso
 
 ```bash
-python clone_repos.py --config_path ../config/repos_to_clone.yaml --clone_path ../repositories
+python clone_repos.py --config_path ../config/config.yaml --clone_path ../repositories
 ```
 
 #### Parámetros
@@ -36,6 +36,23 @@ python scanner.py --base_path ../repositories --json_output_path ../output/scan_
 - `--base_path`: Ruta base a los repositorios.
 - `--json_output_path`: Ruta al archivo de salida en formato JSON.
 - `--txt_output_path`: Ruta al archivo de salida en formato de texto.
+
+### update_spark_version.py
+
+Este script copia los repositorios a una nueva ubicación y actualiza las dependencias de Spark a la versión especificada en el archivo de configuración.
+
+#### Uso
+
+```bash
+python update_spark_version.py --base_path ../repositories --new_base_path ../updated_repositories --scan_results_path ../output/scan_results.json --config_path ../config/config.yaml
+```
+
+#### Parámetros
+
+- `--base_path`: Ruta base a los repositorios originales.
+- `--new_base_path`: Nueva ruta base para los repositorios copiados.
+- `--scan_results_path`: Ruta al archivo JSON que contiene los resultados del escaneo.
+- `--config_path`: Ruta al archivo de configuración que contiene la versión de Spark y el sufijo de artifactId.
 
 ### export_to_db.py
 
@@ -63,13 +80,19 @@ python export_to_db.py --json_path ../output/scan_results.json --db_host localho
 ### Clonar Repositorios
 
 ```bash
-python clone_repos.py --config_path ../config/repos_to_clone.yaml --clone_path ../repositories
+python clone_repos.py --config_path ../config/config.yaml --clone_path ../repositories
 ```
 
 ### Escanear Repositorios
 
 ```bash
 python scanner.py --base_path ../repositories --json_output_path ../output/scan_results.json --txt_output_path ../output/scan_results.txt
+```
+
+### Actualizar Versiones de Spark
+
+```bash
+python update_spark_version.py --base_path ../repositories --new_base_path ../updated_repositories --scan_results_path ../output/scan_results.json --config_path ../config/config.yaml
 ```
 
 ### Exportar Datos a la Base de Datos

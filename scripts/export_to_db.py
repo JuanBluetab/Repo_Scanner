@@ -18,8 +18,8 @@ def create_table(cursor, schema, table_name):
         CREATE TABLE IF NOT EXISTS {schema}.{table_name} (
             id SERIAL PRIMARY KEY,
             repository_name VARCHAR(255) NOT NULL,
-            yaml_file_name VARCHAR(255) NOT NULL,
-            yaml_content JSONB NOT NULL,
+            yaml_file_name VARCHAR(255),
+            yaml_content JSONB,
             dependency_group_id VARCHAR(255),
             dependency_artifact_id VARCHAR(255),
             dependency_version VARCHAR(255),
@@ -61,17 +61,39 @@ def export_to_db(json_path, db_config, schema, table_name):
     try:
         for repo, repo_data in data.items():
             logging.info(f"Inserting data for repository: {repo}")
-            for yaml_file, yaml_content in repo_data['yaml_configs'].items():
-                for dep in repo_data['dependencies']:
+            yaml_configs = repo_data.get('yaml_configs', {})
+            dependencies = repo_data.get('dependencies', [])
+            requirements = repo_data.get('requirements', [])
+            
+            if not yaml_configs and not dependencies:
+                for req in requirements:
                     cursor.execute(f"""
-                        INSERT INTO {schema}.{table_name} (repository_name, yaml_file_name, yaml_content, dependency_group_id, dependency_artifact_id, dependency_version)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (repo, yaml_file, json.dumps(yaml_content), dep['groupId'], dep['artifactId'], dep['version']))
-                for req in repo_data.get('requirements', []):
-                    cursor.execute(f"""
-                        INSERT INTO {schema}.{table_name} (repository_name, yaml_file_name, yaml_content, requirement)
-                        VALUES (%s, %s, %s, %s)
-                    """, (repo, yaml_file, json.dumps(yaml_content), req))
+                        INSERT INTO {schema}.{table_name} (repository_name, requirement)
+                        VALUES (%s, %s)
+                    """, (repo, req))
+            else:
+                for yaml_file, yaml_content in yaml_configs.items():
+                    for dep in dependencies:
+                        cursor.execute(f"""
+                            INSERT INTO {schema}.{table_name} (repository_name, yaml_file_name, yaml_content, dependency_group_id, dependency_artifact_id, dependency_version)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, (repo, yaml_file, json.dumps(yaml_content), dep['groupId'], dep['artifactId'], dep['version']))
+                    for req in requirements:
+                        cursor.execute(f"""
+                            INSERT INTO {schema}.{table_name} (repository_name, yaml_file_name, yaml_content, requirement)
+                            VALUES (%s, %s, %s, %s)
+                        """, (repo, yaml_file, json.dumps(yaml_content), req))
+                if not yaml_configs:
+                    for dep in dependencies:
+                        cursor.execute(f"""
+                            INSERT INTO {schema}.{table_name} (repository_name, dependency_group_id, dependency_artifact_id, dependency_version)
+                            VALUES (%s, %s, %s, %s)
+                        """, (repo, dep['groupId'], dep['artifactId'], dep['version']))
+                    for req in requirements:
+                        cursor.execute(f"""
+                            INSERT INTO {schema}.{table_name} (repository_name, requirement)
+                            VALUES (%s, %s)
+                        """, (repo, req))
         conn.commit()
     except Exception as e:
         logging.error(f"Error inserting data: {e}")
