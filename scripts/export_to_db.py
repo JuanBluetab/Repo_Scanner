@@ -4,7 +4,7 @@ import argparse
 import logging
 from datetime import datetime
 
-def create_table(cursor, schema, table_name):
+def create_tables(cursor, schema, table_name):
     """
     Create the tables in the PostgreSQL database.
     
@@ -70,7 +70,7 @@ def export_to_db(json_path, db_config, schema, table_name):
         return
     
     try:
-        create_table(cursor, schema, table_name)
+        create_tables(cursor, schema, table_name)
     except Exception as e:
         logging.error(f"Error creating table: {e}")
         return
