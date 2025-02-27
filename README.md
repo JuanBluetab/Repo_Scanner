@@ -6,14 +6,14 @@ Este proyecto contiene scripts para clonar repositorios, escanearlos en busca de
 
 ## Scripts
 
-### clone_repos.py
+### initialize_db.py
 
-Este script clona los repositorios habilitados para escaneo desde la base de datos PostgreSQL.
+Este script inicializa la base de datos PostgreSQL ejecutando los scripts de creación de tablas e inserción de datos base.
 
 #### Uso
 
 ```bash
-python clone_repos.py --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema --clone_path ../repositories
+python initialize_db.py --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword
 ```
 
 #### Parámetros
@@ -23,7 +23,24 @@ python clone_repos.py --db_host localhost --db_port 5432 --db_name postgres --db
 - `--db_name`: Nombre de la base de datos.
 - `--db_user`: Usuario de la base de datos.
 - `--db_password`: Contraseña de la base de datos.
-- `--schema`: Esquema donde se encuentran las tablas.
+
+### clone_repos.py
+
+Este script clona los repositorios habilitados para escaneo desde la base de datos PostgreSQL.
+
+#### Uso
+
+```bash
+python clone_repos.py --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword  --clone_path ../repositories
+```
+
+#### Parámetros
+
+- `--db_host`: Host de la base de datos.
+- `--db_port`: Puerto de la base de datos.
+- `--db_name`: Nombre de la base de datos.
+- `--db_user`: Usuario de la base de datos.
+- `--db_password`: Contraseña de la base de datos.
 - `--clone_path`: Ruta donde se clonarán los repositorios.
 
 ### scanner.py
@@ -66,7 +83,7 @@ Este script exporta los datos JSON a una base de datos PostgreSQL, asumiendo que
 #### Uso
 
 ```bash
-python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema
+python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword
 ```
 
 #### Parámetros
@@ -77,7 +94,6 @@ python export_to_db.py --json_path ../output/scan_results.json --db_host localho
 - `--db_name`: Nombre de la base de datos.
 - `--db_user`: Usuario de la base de datos.
 - `--db_password`: Contraseña de la base de datos.
-- `--schema`: Esquema donde se encuentran las tablas.
 
 ### Estructura de la Base de Datos
 
@@ -90,7 +106,7 @@ Los scripts asumen que las siguientes tablas ya están creadas en la base de dat
 - `requirements`: Almacena los requisitos de cada repositorio.
 - `meetings`: Almacena información sobre las reuniones con las organizaciones.
 
-El script de creación de las tablas se encuentran en `create_tables.sql` y los inserts base para la inserción de organizaciones y repositorios se encuentra en `insert_data.sql`.
+El script de creación de las tablas se encuentra en `sql/create_tables.sql` y los inserts base para la inserción de organizaciones y repositorios se encuentra en `sql/insert_data.sql`.
 
 Para visualizar el diagrama de la estructura de base de datos, puede acceder al siguiente enlace de dbdiagram.io: [https://dbdiagram.io/d/67c03280263d6cf9a0a6bf0e]
 

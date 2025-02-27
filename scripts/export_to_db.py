@@ -4,13 +4,12 @@ import argparse
 import logging
 
 
-def export_to_db(json_path, db_config, schema):
+def export_to_db(json_path, db_config):
     """
     Export JSON data to the PostgreSQL database.
     
     :param json_path: Path to the JSON file.
     :param db_config: Dictionary containing database configuration.
-    :param schema: Schema where the tables are located.
     """
     try:
         logging.info(f"Reading JSON file: {json_path}")
@@ -37,31 +36,31 @@ def export_to_db(json_path, db_config, schema):
             
             # Fetch the repository ID from the repositories table
             cursor.execute(f"""
-                SELECT id FROM {schema}.repositories WHERE name = %s
+                SELECT id FROM my_schema.repositories WHERE name = %s
             """, (repo,))
             repo_id = cursor.fetchone()
             
             if repo_id is None:
-                logging.error(f"Repository {repo} not found in {schema}.repositories")
+                logging.error(f"Repository {repo} not found in my_schema.repositories")
                 continue
             
             repo_id = repo_id[0]
             
             for yaml_file, yaml_content in yaml_configs.items():
                 cursor.execute(f"""
-                    INSERT INTO {schema}.yaml_files (repository_id, yaml_file_name, yaml_content)
+                    INSERT INTO my_schema.yaml_files (repository_id, yaml_file_name, yaml_content)
                     VALUES (%s, %s, %s)
                 """, (repo_id, yaml_file, json.dumps(yaml_content)))
             
             for dep in dependencies:
                 cursor.execute(f"""
-                    INSERT INTO {schema}.dependencies (repository_id, group_id, artifact_id, version)
+                    INSERT INTO my_schema.dependencies (repository_id, group_id, artifact_id, version)
                     VALUES (%s, %s, %s, %s)
                 """, (repo_id, dep['groupId'], dep['artifactId'], dep['version']))
             
             for req in requirements:
                 cursor.execute(f"""
-                    INSERT INTO {schema}.requirements (repository_id, requirement)
+                    INSERT INTO my_schema.requirements (repository_id, requirement)
                     VALUES (%s, %s)
                 """, (repo_id, req))
         conn.commit()
@@ -85,7 +84,6 @@ def main():
     parser.add_argument('--db_name', type=str, required=True, help='Database name.')
     parser.add_argument('--db_user', type=str, required=True, help='Database user.')
     parser.add_argument('--db_password', type=str, required=True, help='Database password.')
-    parser.add_argument('--schema', type=str, required=True, help='Schema where the table is located.')
     args = parser.parse_args()
 
     db_config = {
@@ -96,7 +94,7 @@ def main():
         'password': args.db_password
     }
 
-    export_to_db(args.json_path, db_config, args.schema)
+    export_to_db(args.json_path, db_config)
 
 if __name__ == "__main__":
     main()

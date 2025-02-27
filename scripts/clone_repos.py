@@ -18,20 +18,19 @@ def clone_repo(repo_url, clone_path):
     logging.info(f"Cloning repository: {repo_url} into {clone_path}")
     Repo.clone_from(repo_url, clone_path)
 
-def get_repositories_to_clone(db_config, schema):
+def get_repositories_to_clone(db_config):
     """
     Get the list of repositories to clone from the database.
     
     :param db_config: Database configuration dictionary.
-    :param schema: Schema name in the database.
     :return: List of repository URLs to clone.
     """
     conn = psycopg2.connect(**db_config)
     cursor = conn.cursor()
     query = f"""
     SELECT r.link
-    FROM {schema}.organizations o
-    JOIN {schema}.repositories r ON o.id = r.organization_id
+    FROM my_schema.organizations o
+    JOIN my_schema.repositories r ON o.id = r.organization_id
     WHERE o.scan = TRUE AND r.scan = TRUE;
     """
     cursor.execute(query)
@@ -52,7 +51,6 @@ def main():
     parser.add_argument('--db_name', type=str, required=True, help='Database name.')
     parser.add_argument('--db_user', type=str, required=True, help='Database user.')
     parser.add_argument('--db_password', type=str, required=True, help='Database password.')
-    parser.add_argument('--schema', type=str, required=True, help='Schema name in the database.')
     parser.add_argument('--clone_path', type=str, required=True, help='Path where repositories will be cloned.')
     args = parser.parse_args()
 
@@ -64,7 +62,7 @@ def main():
         'password': args.db_password
     }
 
-    repo_urls = get_repositories_to_clone(db_config, args.schema)
+    repo_urls = get_repositories_to_clone(db_config)
     if not repo_urls:
         logging.error("No repositories found to clone.")
         return
