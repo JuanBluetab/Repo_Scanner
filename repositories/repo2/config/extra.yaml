@@ -1,3 +1,0 @@
-logging:
-  level: "INFO"
-  file: "/var/log/repo2.log"

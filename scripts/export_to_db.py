@@ -4,54 +4,12 @@ import argparse
 import logging
 from datetime import datetime
 
-def create_table(cursor, schema, table_name):
-    """
-    Create the tables in the PostgreSQL database.
-    
-    :param cursor: Database cursor.
-    :param schema: Schema where the tables are located.
-    :param table_name: Name of the main table to create.
-    """
-    logging.info(f"Creating tables in schema {schema}")
-    cursor.execute(f"""
-        CREATE SCHEMA IF NOT EXISTS {schema};
-
-        CREATE TABLE IF NOT EXISTS {schema}.{table_name} (
-            id SERIAL PRIMARY KEY,
-            repository_name VARCHAR(255) NOT NULL,
-            execution_date TIMESTAMP NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.yaml_files (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            yaml_file_name VARCHAR(255),
-            yaml_content JSONB
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.dependencies (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            group_id VARCHAR(255),
-            artifact_id VARCHAR(255),
-            version VARCHAR(255)
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.requirements (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            requirement VARCHAR(255)
-        );
-    """)
-
-def export_to_db(json_path, db_config, schema, table_name):
+def export_to_db(json_path, db_config):
     """
     Export JSON data to the PostgreSQL database.
     
     :param json_path: Path to the JSON file.
     :param db_config: Dictionary containing database configuration.
-    :param schema: Schema where the tables are located.
-    :param table_name: Name of the main table to create and insert data into.
     """
     try:
         logging.info(f"Reading JSON file: {json_path}")
@@ -69,44 +27,59 @@ def export_to_db(json_path, db_config, schema, table_name):
         logging.error(f"Error connecting to the database: {e}")
         return
     
-    try:
-        create_table(cursor, schema, table_name)
-    except Exception as e:
-        logging.error(f"Error creating table: {e}")
-        return
-    
     execution_date = datetime.now()
     
     try:
         for repo, repo_data in data.items():
-            logging.info(f"Inserting data for repository: {repo}")
+            logging.info(f"Preparing data for repository: {repo}")
             yaml_configs = repo_data.get('yaml_configs', {})
             dependencies = repo_data.get('dependencies', [])
             requirements = repo_data.get('requirements', [])
             
+            # Fetch the repository ID from the repositories table
             cursor.execute(f"""
-                INSERT INTO {schema}.{table_name} (repository_name, execution_date)
-                VALUES (%s, %s) RETURNING id
-            """, (repo, execution_date))
-            repo_id = cursor.fetchone()[0]
+                SELECT id FROM my_schema.repositories WHERE name = %s
+            """, (repo,))
+            repo_id = cursor.fetchone()
             
+            if repo_id is None:
+                logging.error(f"Repository {repo} not found in my_schema.repositories")
+                continue
+            
+            repo_id = repo_id[0]
+            
+            # Delete old entries from yaml_files, dependencies, and requirements tables
+            logging.info(f"Delete old entries from yaml_files, dependencies, and requirements for: {repo}")
+            cursor.execute(f"DELETE FROM my_schema.yaml_files WHERE repository_id = %s", (repo_id,))
+            cursor.execute(f"DELETE FROM my_schema.dependencies WHERE repository_id = %s", (repo_id,))
+            cursor.execute(f"DELETE FROM my_schema.requirements WHERE repository_id = %s", (repo_id,))
+            
+            logging.info(f"Inserting data for repository: {repo}")
             for yaml_file, yaml_content in yaml_configs.items():
                 cursor.execute(f"""
-                    INSERT INTO {schema}.yaml_files (repository_id, yaml_file_name, yaml_content)
+                    INSERT INTO my_schema.yaml_files (repository_id, yaml_file_name, yaml_content)
                     VALUES (%s, %s, %s)
                 """, (repo_id, yaml_file, json.dumps(yaml_content)))
             
             for dep in dependencies:
                 cursor.execute(f"""
-                    INSERT INTO {schema}.dependencies (repository_id, group_id, artifact_id, version)
+                    INSERT INTO my_schema.dependencies (repository_id, group_id, artifact_id, version)
                     VALUES (%s, %s, %s, %s)
                 """, (repo_id, dep['groupId'], dep['artifactId'], dep['version']))
             
             for req in requirements:
                 cursor.execute(f"""
-                    INSERT INTO {schema}.requirements (repository_id, requirement)
+                    INSERT INTO my_schema.requirements (repository_id, requirement)
                     VALUES (%s, %s)
                 """, (repo_id, req))
+            
+            # Update the last_scan_date for the repository
+            cursor.execute(f"""
+                UPDATE my_schema.repositories
+                SET last_scan_date = %s
+                WHERE id = %s
+            """, (execution_date, repo_id))
+        
         conn.commit()
     except Exception as e:
         logging.error(f"Error inserting data: {e}")
@@ -128,8 +101,6 @@ def main():
     parser.add_argument('--db_name', type=str, required=True, help='Database name.')
     parser.add_argument('--db_user', type=str, required=True, help='Database user.')
     parser.add_argument('--db_password', type=str, required=True, help='Database password.')
-    parser.add_argument('--schema', type=str, required=True, help='Schema where the table is located.')
-    parser.add_argument('--table_name', type=str, required=True, help='Name of the table to create and insert data into.')
     args = parser.parse_args()
 
     db_config = {
@@ -140,7 +111,7 @@ def main():
         'password': args.db_password
     }
 
-    export_to_db(args.json_path, db_config, args.schema, args.table_name)
+    export_to_db(args.json_path, db_config)
 
 if __name__ == "__main__":
     main()

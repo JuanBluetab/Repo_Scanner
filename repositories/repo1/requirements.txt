@@ -1,3 +1,0 @@
-pyspark==2.4.0
-numpy==1.18.1
-pandas==1.0.3

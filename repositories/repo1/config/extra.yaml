@@ -1,3 +1,0 @@
-logging:
-  level: "DEBUG"
-  file: "/var/log/repo1.log"

@@ -6,19 +6,41 @@ Este proyecto contiene scripts para clonar repositorios, escanearlos en busca de
 
 ## Scripts
 
-### clone_repos.py
+### initialize_db.py
 
-Este script clona los repositorios especificados en un archivo de configuración.
+Este script inicializa la base de datos PostgreSQL ejecutando los scripts de creación de tablas e inserción de datos base.
 
 #### Uso
 
 ```bash
-python clone_repos.py --config_path ../config/config.yaml --clone_path ../repositories
+python initialize_db.py --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword
 ```
 
 #### Parámetros
 
-- `--config_path`: Ruta al archivo de configuración que contiene las URLs de los repositorios.
+- `--db_host`: Host de la base de datos.
+- `--db_port`: Puerto de la base de datos.
+- `--db_name`: Nombre de la base de datos.
+- `--db_user`: Usuario de la base de datos.
+- `--db_password`: Contraseña de la base de datos.
+
+### clone_repos.py
+
+Este script clona los repositorios habilitados para escaneo desde la base de datos PostgreSQL.
+
+#### Uso
+
+```bash
+python clone_repos.py --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword  --clone_path ../repositories
+```
+
+#### Parámetros
+
+- `--db_host`: Host de la base de datos.
+- `--db_port`: Puerto de la base de datos.
+- `--db_name`: Nombre de la base de datos.
+- `--db_user`: Usuario de la base de datos.
+- `--db_password`: Contraseña de la base de datos.
 - `--clone_path`: Ruta donde se clonarán los repositorios.
 
 ### scanner.py
@@ -56,12 +78,12 @@ python update_spark_version.py --base_path ../repositories --new_base_path ../up
 
 ### export_to_db.py
 
-Este script exporta los datos JSON a una base de datos PostgreSQL, creando las tablas si no existen.
+Este script exporta los datos JSON a una base de datos PostgreSQL, asumiendo que las tablas ya están creadas.
 
 #### Uso
 
 ```bash
-python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name mydatabase --db_user myuser --db_password mypassword --schema my_schema --table_name repository_data
+python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword
 ```
 
 #### Parámetros
@@ -72,43 +94,21 @@ python export_to_db.py --json_path ../output/scan_results.json --db_host localho
 - `--db_name`: Nombre de la base de datos.
 - `--db_user`: Usuario de la base de datos.
 - `--db_password`: Contraseña de la base de datos.
-- `--schema`: Esquema donde se encuentran las tablas.
-- `--table_name`: Nombre de la tabla principal a crear e insertar datos.
 
 ### Estructura de la Base de Datos
 
-El script `export_to_db.py` crea las siguientes tablas en la base de datos PostgreSQL:
+Los scripts asumen que las siguientes tablas ya están creadas en la base de datos PostgreSQL:
 
-- `repository_data`: Almacena información básica del repositorio y la fecha de ejecución.
+- `organizations`: Almacena información sobre las organizaciones.
+- `repositories`: Almacena información sobre los repositorios.
 - `yaml_files`: Almacena los archivos YAML asociados a cada repositorio.
 - `dependencies`: Almacena las dependencias de cada repositorio.
 - `requirements`: Almacena los requisitos de cada repositorio.
+- `meetings`: Almacena información sobre las reuniones con las organizaciones.
 
-## Ejemplo de Comandos
+El script de creación de las tablas se encuentra en `sql/create_tables.sql` y los inserts base para la inserción de organizaciones y repositorios se encuentra en `sql/insert_data.sql`.
 
-### Clonar Repositorios
-
-```bash
-python clone_repos.py --config_path ../config/config.yaml --clone_path ../repositories
-```
-
-### Escanear Repositorios
-
-```bash
-python scanner.py --base_path ../repositories --json_output_path ../output/scan_results.json --txt_output_path ../output/scan_results.txt
-```
-
-### Actualizar Versiones de Spark
-
-```bash
-python update_spark_version.py --base_path ../repositories --new_base_path ../updated_repositories --scan_results_path ../output/scan_results.json --config_path ../config/config.yaml
-```
-
-### Exportar Datos a la Base de Datos
-
-```bash
-python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema --table_name repository_data
-```
+Para visualizar el diagrama de la estructura de base de datos, puede acceder al siguiente enlace de dbdiagram.io: [https://dbdiagram.io/d/67c03280263d6cf9a0a6bf0e]
 
 ## Configuración de la Base de Datos PostgreSQL con Podman
 
