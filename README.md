@@ -16,7 +16,7 @@ pip install -r requirements.txt
 
 ### 1. initialize_db.py
 
-Este script inicializa la base de datos PostgreSQL ejecutando los scripts de creación de tablas e inserción de datos base.
+Este script inicializa la base de datos PostgreSQL ejecutando los scripts de creación de tablas o limpiado de las mismas en caso de que ya hayan sido creadas.
 
 #### Uso
 
@@ -55,9 +55,9 @@ python import_excel_to_db.py --config_path ../config/config.yaml --db_host local
 
 El archivo Excel debe contener las siguientes páginas:
 
-- `organizaciones`: Contiene información sobre las organizaciones.
-- `repositorios`: Contiene información sobre los repositorios.
-
+- `organizations`: Contiene información sobre las organizaciones.
+- `repositories`: Contiene información sobre los repositorios.
+- `meetings`: Contiene información sobre reuniones que se haya podido tener con los responsables de las organizaciones. 
 
 ### 3. clone_repos.py
 
