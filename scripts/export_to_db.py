@@ -2,56 +2,15 @@ import json
 import psycopg2
 import argparse
 import logging
-from datetime import datetime
 
-def create_tables(cursor, schema, table_name):
-    """
-    Create the tables in the PostgreSQL database.
-    
-    :param cursor: Database cursor.
-    :param schema: Schema where the tables are located.
-    :param table_name: Name of the main table to create.
-    """
-    logging.info(f"Creating tables in schema {schema}")
-    cursor.execute(f"""
-        CREATE SCHEMA IF NOT EXISTS {schema};
 
-        CREATE TABLE IF NOT EXISTS {schema}.{table_name} (
-            id SERIAL PRIMARY KEY,
-            repository_name VARCHAR(255) NOT NULL,
-            execution_date TIMESTAMP NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.yaml_files (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            yaml_file_name VARCHAR(255),
-            yaml_content JSONB
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.dependencies (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            group_id VARCHAR(255),
-            artifact_id VARCHAR(255),
-            version VARCHAR(255)
-        );
-
-        CREATE TABLE IF NOT EXISTS {schema}.requirements (
-            id SERIAL PRIMARY KEY,
-            repository_id INT REFERENCES {schema}.{table_name}(id),
-            requirement VARCHAR(255)
-        );
-    """)
-
-def export_to_db(json_path, db_config, schema, table_name):
+def export_to_db(json_path, db_config, schema):
     """
     Export JSON data to the PostgreSQL database.
     
     :param json_path: Path to the JSON file.
     :param db_config: Dictionary containing database configuration.
     :param schema: Schema where the tables are located.
-    :param table_name: Name of the main table to create and insert data into.
     """
     try:
         logging.info(f"Reading JSON file: {json_path}")
@@ -70,25 +29,23 @@ def export_to_db(json_path, db_config, schema, table_name):
         return
     
     try:
-        create_tables(cursor, schema, table_name)
-    except Exception as e:
-        logging.error(f"Error creating table: {e}")
-        return
-    
-    execution_date = datetime.now()
-    
-    try:
         for repo, repo_data in data.items():
             logging.info(f"Inserting data for repository: {repo}")
             yaml_configs = repo_data.get('yaml_configs', {})
             dependencies = repo_data.get('dependencies', [])
             requirements = repo_data.get('requirements', [])
             
+            # Fetch the repository ID from the repositories table
             cursor.execute(f"""
-                INSERT INTO {schema}.{table_name} (repository_name, execution_date)
-                VALUES (%s, %s) RETURNING id
-            """, (repo, execution_date))
-            repo_id = cursor.fetchone()[0]
+                SELECT id FROM {schema}.repositories WHERE name = %s
+            """, (repo,))
+            repo_id = cursor.fetchone()
+            
+            if repo_id is None:
+                logging.error(f"Repository {repo} not found in {schema}.repositories")
+                continue
+            
+            repo_id = repo_id[0]
             
             for yaml_file, yaml_content in yaml_configs.items():
                 cursor.execute(f"""
@@ -129,7 +86,6 @@ def main():
     parser.add_argument('--db_user', type=str, required=True, help='Database user.')
     parser.add_argument('--db_password', type=str, required=True, help='Database password.')
     parser.add_argument('--schema', type=str, required=True, help='Schema where the table is located.')
-    parser.add_argument('--table_name', type=str, required=True, help='Name of the table to create and insert data into.')
     args = parser.parse_args()
 
     db_config = {
@@ -140,7 +96,7 @@ def main():
         'password': args.db_password
     }
 
-    export_to_db(args.json_path, db_config, args.schema, args.table_name)
+    export_to_db(args.json_path, db_config, args.schema)
 
 if __name__ == "__main__":
     main()

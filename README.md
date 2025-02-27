@@ -61,12 +61,12 @@ python update_spark_version.py --base_path ../repositories --new_base_path ../up
 
 ### export_to_db.py
 
-Este script exporta los datos JSON a una base de datos PostgreSQL, creando las tablas si no existen.
+Este script exporta los datos JSON a una base de datos PostgreSQL, asumiendo que las tablas ya están creadas.
 
 #### Uso
 
 ```bash
-python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema --table_name repository_data
+python export_to_db.py --json_path ../output/scan_results.json --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword --schema my_schema
 ```
 
 #### Parámetros
@@ -78,16 +78,21 @@ python export_to_db.py --json_path ../output/scan_results.json --db_host localho
 - `--db_user`: Usuario de la base de datos.
 - `--db_password`: Contraseña de la base de datos.
 - `--schema`: Esquema donde se encuentran las tablas.
-- `--table_name`: Nombre de la tabla principal a crear e insertar datos.
 
 ### Estructura de la Base de Datos
 
-El script `export_to_db.py` crea las siguientes tablas en la base de datos PostgreSQL:
+Los scripts asumen que las siguientes tablas ya están creadas en la base de datos PostgreSQL:
 
-- `repository_data`: Almacena información básica del repositorio y la fecha de ejecución.
+- `organizations`: Almacena información sobre las organizaciones.
+- `repositories`: Almacena información sobre los repositorios.
 - `yaml_files`: Almacena los archivos YAML asociados a cada repositorio.
 - `dependencies`: Almacena las dependencias de cada repositorio.
 - `requirements`: Almacena los requisitos de cada repositorio.
+- `meetings`: Almacena información sobre las reuniones con las organizaciones.
+
+El script de creación de las tablas se encuentran en `create_tables.sql` y los inserts base para la inserción de organizaciones y repositorios se encuentra en `insert_data.sql`.
+
+Para visualizar el diagrama de la estructura de base de datos, puede acceder al siguiente enlace de dbdiagram.io: [https://dbdiagram.io/d/67c03280263d6cf9a0a6bf0e]
 
 ## Configuración de la Base de Datos PostgreSQL con Podman
 

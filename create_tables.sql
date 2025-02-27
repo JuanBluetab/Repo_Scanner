@@ -27,3 +27,30 @@ CREATE TABLE my_schema.repositories (
     last_scan_date DATE,
     FOREIGN KEY (organization_id) REFERENCES organizations(id)
 );
+
+-- Table Requirements
+CREATE TABLE my_schema.requirements (
+    id SERIAL PRIMARY KEY,
+    repository_id INT NOT NULL,
+    requirement VARCHAR(255),
+    FOREIGN KEY (repository_id) REFERENCES repositories(id)
+);
+
+-- Table YAML Files
+CREATE TABLE my_schema.yaml_files (
+    id SERIAL PRIMARY KEY,
+    repository_id INT NOT NULL,
+    yaml_file_name VARCHAR(255),
+    yaml_content JSONB,
+    FOREIGN KEY (repository_id) REFERENCES repositories(id)
+);
+
+-- Table Dependencies
+CREATE TABLE my_schema.dependencies (
+    id SERIAL PRIMARY KEY,
+    repository_id INT NOT NULL,
+    group_id VARCHAR(255),
+    artifact_id VARCHAR(255),
+    version VARCHAR(255),
+    FOREIGN KEY (repository_id) REFERENCES repositories(id)
+);
