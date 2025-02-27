@@ -4,9 +4,17 @@
 
 Este proyecto contiene scripts para clonar repositorios, escanearlos en busca de archivos de configuración y dependencias, exportar los resultados a una base de datos PostgreSQL y copiar los repositorios actualizando la versión de Spark en sus dependencias.
 
+## Instalación de Dependencias
+
+Para instalar las librerías necesarias para el correcto funcionamiento del proyecto, utiliza el archivo `requirements.txt`. Puedes instalar las dependencias utilizando `pip`:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Scripts
 
-### initialize_db.py
+### 1. initialize_db.py
 
 Este script inicializa la base de datos PostgreSQL ejecutando los scripts de creación de tablas e inserción de datos base.
 
@@ -24,7 +32,34 @@ python initialize_db.py --db_host localhost --db_port 5432 --db_name postgres --
 - `--db_user`: Usuario de la base de datos.
 - `--db_password`: Contraseña de la base de datos.
 
-### clone_repos.py
+### 2. import_excel_to_db.py
+
+Este script importa datos de un archivo Excel a las tablas correspondientes en la base de datos PostgreSQL. Sirve para hacer el primer poblado de la base de datos añadiendo la información del excel de organizaciones, repositorios relacionados y meetings que hayan podido realizarse con información relevante. El excel a leer es `Clodera_Exit_Info.xlsx`. 
+
+#### Uso
+
+```bash
+python import_excel_to_db.py --config_path ../config/config.yaml --db_host localhost --db_port 5432 --db_name postgres --db_user postgres --db_password mysecretpassword
+```
+
+#### Parámetros
+
+- `--config_path`: Ruta del archivo de configuración.
+- `--db_host`: Host de la base de datos.
+- `--db_port`: Puerto de la base de datos.
+- `--db_name`: Nombre de la base de datos.
+- `--db_user`: Usuario de la base de datos.
+- `--db_password`: Contraseña de la base de datos.
+
+#### Páginas del archivo Excel
+
+El archivo Excel debe contener las siguientes páginas:
+
+- `organizaciones`: Contiene información sobre las organizaciones.
+- `repositorios`: Contiene información sobre los repositorios.
+
+
+### 3. clone_repos.py
 
 Este script clona los repositorios habilitados para escaneo desde la base de datos PostgreSQL.
 
@@ -43,7 +78,7 @@ python clone_repos.py --db_host localhost --db_port 5432 --db_name postgres --db
 - `--db_password`: Contraseña de la base de datos.
 - `--clone_path`: Ruta donde se clonarán los repositorios.
 
-### scanner.py
+### 4. scanner.py
 
 Este script escanea los repositorios en busca de archivos `config.yaml`, `pom.xml` y `requirements.txt`, y genera archivos de resultados en formato JSON y texto.
 
@@ -59,7 +94,7 @@ python scanner.py --base_path ../repositories --json_output_path ../output/scan_
 - `--json_output_path`: Ruta al archivo de salida en formato JSON.
 - `--txt_output_path`: Ruta al archivo de salida en formato de texto.
 
-### update_spark_version.py
+### 5. update_spark_version.py
 
 Este script copia los repositorios a una nueva ubicación y actualiza las dependencias de Spark a la versión especificada en el archivo de configuración.
 
@@ -76,7 +111,7 @@ python update_spark_version.py --base_path ../repositories --new_base_path ../up
 - `--scan_results_path`: Ruta al archivo JSON que contiene los resultados del escaneo.
 - `--config_path`: Ruta al archivo de configuración que contiene la versión de Spark y el sufijo de artifactId.
 
-### export_to_db.py
+### 6. export_to_db.py
 
 Este script exporta los datos JSON a una base de datos PostgreSQL, asumiendo que las tablas ya están creadas.
 
@@ -106,7 +141,7 @@ Los scripts asumen que las siguientes tablas ya están creadas en la base de dat
 - `requirements`: Almacena los requisitos de cada repositorio.
 - `meetings`: Almacena información sobre las reuniones con las organizaciones.
 
-El script de creación de las tablas se encuentra en `sql/create_tables.sql` y los inserts base para la inserción de organizaciones y repositorios se encuentra en `sql/insert_data.sql`.
+El script de creación de las tablas se encuentra en `sql/create_tables.sql`.
 
 Para visualizar el diagrama de la estructura de base de datos, puede acceder al siguiente enlace de dbdiagram.io: [https://dbdiagram.io/d/67c03280263d6cf9a0a6bf0e]
 

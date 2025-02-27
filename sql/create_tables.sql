@@ -1,5 +1,8 @@
+-- Schema: my_schema
+CREATE SCHEMA IF NOT EXISTS my_schema;
+
 -- Table Organizations
-CREATE TABLE my_schema.organizations (
+CREATE TABLE IF NOT EXISTS my_schema.organizations (
     id SERIAL PRIMARY KEY,
     initiative VARCHAR(255) NOT NULL,
     contact VARCHAR(255) NOT NULL,
@@ -9,7 +12,7 @@ CREATE TABLE my_schema.organizations (
 );
 
 -- Table Meetings
-CREATE TABLE my_schema.meetings (
+CREATE TABLE IF NOT EXISTS my_schema.meetings (
     id SERIAL PRIMARY KEY,
     organization_id INT NOT NULL,
     date DATE NOT NULL,
@@ -18,7 +21,7 @@ CREATE TABLE my_schema.meetings (
 );
 
 -- Table Repositories
-CREATE TABLE my_schema.repositories (
+CREATE TABLE IF NOT EXISTS my_schema.repositories (
     id SERIAL PRIMARY KEY,
     organization_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -29,7 +32,7 @@ CREATE TABLE my_schema.repositories (
 );
 
 -- Table Requirements
-CREATE TABLE my_schema.requirements (
+CREATE TABLE IF NOT EXISTS my_schema.requirements (
     id SERIAL PRIMARY KEY,
     repository_id INT NOT NULL,
     requirement VARCHAR(255),
@@ -37,7 +40,7 @@ CREATE TABLE my_schema.requirements (
 );
 
 -- Table YAML Files
-CREATE TABLE my_schema.yaml_files (
+CREATE TABLE IF NOT EXISTS my_schema.yaml_files (
     id SERIAL PRIMARY KEY,
     repository_id INT NOT NULL,
     yaml_file_name VARCHAR(255),
@@ -46,7 +49,7 @@ CREATE TABLE my_schema.yaml_files (
 );
 
 -- Table Dependencies
-CREATE TABLE my_schema.dependencies (
+CREATE TABLE IF NOT EXISTS my_schema.dependencies (
     id SERIAL PRIMARY KEY,
     repository_id INT NOT NULL,
     group_id VARCHAR(255),

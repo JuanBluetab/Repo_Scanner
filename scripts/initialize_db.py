@@ -14,6 +14,17 @@ def execute_sql_file(cursor, file_path):
         sql = file.read()
         cursor.execute(sql)
 
+def clear_tables(cursor):
+    """
+    Clear all data from the existing tables.
+    
+    :param cursor: Database cursor.
+    """
+    logging.info("Clearing existing tables")
+    tables = ['dependencies', 'yaml_files', 'requirements', 'repositories', 'meetings', 'organizations']
+    for table in tables:
+        cursor.execute(f"TRUNCATE TABLE my_schema.{table} CASCADE;")
+
 def initialize_db(db_config):
     """
     Initialize the database by creating tables and inserting base data.
@@ -31,8 +42,8 @@ def initialize_db(db_config):
     try:
         # Set the search path to the schema
         cursor.execute(f"SET search_path TO my_schema;")
+        clear_tables(cursor)
         execute_sql_file(cursor, f'../sql/create_tables.sql')
-        execute_sql_file(cursor, f'../sql/insert_data.sql')
         conn.commit()
     except Exception as e:
         logging.error(f"Error executing SQL file: {e}")
