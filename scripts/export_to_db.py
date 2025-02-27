@@ -2,7 +2,7 @@ import json
 import psycopg2
 import argparse
 import logging
-
+from datetime import datetime
 
 def export_to_db(json_path, db_config):
     """
@@ -27,9 +27,11 @@ def export_to_db(json_path, db_config):
         logging.error(f"Error connecting to the database: {e}")
         return
     
+    execution_date = datetime.now()
+    
     try:
         for repo, repo_data in data.items():
-            logging.info(f"Inserting data for repository: {repo}")
+            logging.info(f"Preparing data for repository: {repo}")
             yaml_configs = repo_data.get('yaml_configs', {})
             dependencies = repo_data.get('dependencies', [])
             requirements = repo_data.get('requirements', [])
@@ -46,6 +48,13 @@ def export_to_db(json_path, db_config):
             
             repo_id = repo_id[0]
             
+            # Delete old entries from yaml_files, dependencies, and requirements tables
+            logging.info(f"Delete old entries from yaml_files, dependencies, and requirements for: {repo}")
+            cursor.execute(f"DELETE FROM my_schema.yaml_files WHERE repository_id = %s", (repo_id,))
+            cursor.execute(f"DELETE FROM my_schema.dependencies WHERE repository_id = %s", (repo_id,))
+            cursor.execute(f"DELETE FROM my_schema.requirements WHERE repository_id = %s", (repo_id,))
+            
+            logging.info(f"Inserting data for repository: {repo}")
             for yaml_file, yaml_content in yaml_configs.items():
                 cursor.execute(f"""
                     INSERT INTO my_schema.yaml_files (repository_id, yaml_file_name, yaml_content)
@@ -63,6 +72,14 @@ def export_to_db(json_path, db_config):
                     INSERT INTO my_schema.requirements (repository_id, requirement)
                     VALUES (%s, %s)
                 """, (repo_id, req))
+            
+            # Update the last_scan_date for the repository
+            cursor.execute(f"""
+                UPDATE my_schema.repositories
+                SET last_scan_date = %s
+                WHERE id = %s
+            """, (execution_date, repo_id))
+        
         conn.commit()
     except Exception as e:
         logging.error(f"Error inserting data: {e}")
